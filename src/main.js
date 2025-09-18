@@ -4,41 +4,66 @@
  * @param _product карточка товара
  * @returns {number}
  */
-function calculateSimpleRevenue(purchase, _product) {
-   // @TODO: Расчет выручки от операции
+function calculateSimpleRevenue(purchase, product) {
+    const revenue = product.retail_price * purchase.quantity * (1 - (purchase.discount || 0));
+    const cost = product.purchase_price * purchase.quantity;
+    return revenue - cost;
 }
 
-/**
- * Функция для расчета бонусов
- * @param index порядковый номер в отсортированном массиве
- * @param total общее число продавцов
- * @param seller карточка продавца
- * @returns {number}
- */
-function calculateBonusByProfit(index, total, seller) {
-    // @TODO: Расчет бонуса от позиции в рейтинге
+function calculateBonusByProfit(index, totalProfit, seller) {
+    if (index === 0) return totalProfit * 0.1;
+    if (index === 1) return totalProfit * 0.05;
+    return totalProfit * 0.02;
 }
 
-/**
- * Функция для анализа данных продаж
- * @param data
- * @param options
- * @returns {{revenue, top_products, bonus, name, sales_count, profit, seller_id}[]}
- */
 function analyzeSalesData(data, options) {
-    // @TODO: Проверка входных данных
-
-    // @TODO: Проверка наличия опций
-
-    // @TODO: Подготовка промежуточных данных для сбора статистики
-
-    // @TODO: Индексация продавцов и товаров для быстрого доступа
-
-    // @TODO: Расчет выручки и прибыли для каждого продавца
-
-    // @TODO: Сортировка продавцов по прибыли
-
-    // @TODO: Назначение премий на основе ранжирования
-
-    // @TODO: Подготовка итоговой коллекции с нужными полями
+    if (!data
+        || !Array.isArray(data.sellers)
+        || !Array.isArray(data.products)
+        || !Array.isArray(data.purchase_records)
+        || data.sellers.length === 0
+        || data.products.length === 0
+        || data.purchase_records.length === 0
+    ) {
+        throw new Error('Некорректные входные данные');
+    }
+    if (!options || typeof options.calculateSimpleRevenue !== 'function' || typeof options.calculateBonusByProfit !== 'function') {
+        throw new Error('Не переданы обязательные функции calculateSimpleRevenue и calculateBonusByProfit');
+    }
+    const { calculateSimpleRevenue, calculateBonusByProfit } = options;
+    const sellerIndex = new Map();
+    data.sellers.forEach(seller => {
+        sellerIndex.set(seller.id, {
+            id: seller.id,
+            name: `${seller.first_name} ${seller.last_name}`,
+            profit: 0,
+            sales_count: 0,
+            products_sold: {},
+        });
+    });
+    const productIndex = new Map();
+    data.products.forEach(product => {
+        productIndex.set(product.sku, product);
+    });
+    data.purchase_records.forEach(record => {
+        const seller = sellerIndex.get(record.seller_id);
+        if (!seller) return;
+        seller.sales_count++;
+        record.items.forEach(item => {
+            const product = productIndex.get(item.sku);
+            if (!product) return;
+            const profit = calculateSimpleRevenue(item, product);
+            seller.profit += profit;
+            if (!seller.products_sold[item.sku]) {
+                seller.products_sold[item.sku] = 0;
+            }
+            seller.products_sold[item.sku] += item.quantity;
+        });
+    });
+    const sellers = Array.from(sellerIndex.values());
+    sellers.sort((a, b) => b.profit - a.profit);
+    sellers.forEach((seller, idx) => {
+        seller.bonus = calculateBonusByProfit(idx, seller.profit, seller);
+    });
+    return sellers;
 }
