@@ -5,15 +5,17 @@
  * @returns {number}
  */
 function calculateSimpleRevenue(purchase, product) {
-    const revenue = product.retail_price * purchase.quantity * (1 - (purchase.discount || 0));
+    const discountFraction = (purchase.discount || 0) / 100;
+    const revenue = purchase.sale_price * purchase.quantity * (1 - discountFraction);
     const cost = product.purchase_price * purchase.quantity;
     return revenue - cost;
 }
 
 function calculateBonusByProfit(index, totalProfit, seller) {
-    if (index === 0) return totalProfit * 0.1;
-    if (index === 1) return totalProfit * 0.05;
-    return totalProfit * 0.02;
+    if (index === 0) return totalProfit * 0.15;
+    if (index === 1 || index === 2) return totalProfit * 0.10;
+    if (index === 3) return totalProfit * 0.05;
+    return 0;
 }
 
 function analyzeSalesData(data, options) {
