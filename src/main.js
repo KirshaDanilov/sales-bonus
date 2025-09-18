@@ -19,27 +19,21 @@ function calculateSimpleRevenue(purchase, _product) {
  * @returns {number}
  */
 function calculateBonusByProfit(index, total, seller) {
-  // Реализация метода расчёта бонуса по месту в рейтинге и прибыли
-
   if (index === 0) {
-    // 15% — для первого места
-    return seller.profit * 0.15;
+    return seller.profit * 0.15; // 15% за первое место
   } else if (index === 1 || index === 2) {
-    // 10% — для второго и третьего места
-    return seller.profit * 0.10;
+    return seller.profit * 0.10; // 10% за 2 и 3 место
   } else if (index === total - 1) {
-    // 0% — для последнего места
-    return 0;
+    return 0; // за последнее место
   } else {
-    // 5% — для всех остальных
-    return seller.profit * 0.05;
+    return seller.profit * 0.05; // для остальных
   }
 }
 
 /*** Функция для анализа данных продаж
  * @param data
  * @param options
- * @returns {{revenue, top_products, bonus, name, sales_count, profit, seller_id}[]}
+ * @returns {*}
  */
 function analyzeSalesData(data, options) {
   if (
@@ -87,6 +81,7 @@ function analyzeSalesData(data, options) {
     data.products.map(product => [product.sku, product])
   );
 
+  // Обрабатываем каждую покупку
   data.purchase_records.forEach(record => {
     const seller = sellerIndex[record.seller_id];
     if (!seller) return;
@@ -108,30 +103,23 @@ function analyzeSalesData(data, options) {
     });
   });
 
-  // Сортируем по прибыли по убыванию
+  // Сортируем продавцов по прибыли
   sellerStats.sort((a, b) => b.profit - a.profit);
 
-  // --- Шаг 3. Назначение премий на основе ранжирования ---
   const totalSellers = sellerStats.length;
 
+  // Назначение премий и формирование топ-10
   sellerStats.forEach((seller, index) => {
-    // Посчитайте бонус, используя calculateBonus
     seller.bonus = calculateBonus(index, totalSellers, seller);
 
-    // Сформируйте топ-10 проданных продуктов (убрать первые 10)
-    // Преобразование products_sold в массив [{sku, quantity}]
-    const productsArray = Object.entries(seller.products_sold || {}).map(([sku, quantity]) => ({
-      sku,
-      quantity
-    }));
-
-    // Сортируем по количеству проданных (quantity) по убыванию
-    productsArray.sort((a, b) => b.quantity - a.quantity);
-
-    // Убираем первые 10 (оставляем с 11-го и дальше)
-    seller.top_products = productsArray.slice(10);
+    // Формируем топ-10 продаваемых товаров
+    seller.top_products = Object.entries(seller.products_sold || {})
+      .map(([sku, quantity]) => ({ sku, quantity }))
+      .sort((a, b) => b.quantity - a.quantity)
+      .slice(0, 10);
   });
 
+  // Формируем итоговый массив с округленными значениями
   return sellerStats.map(seller => ({
     seller_id: seller.seller_id,
     name: seller.name,
