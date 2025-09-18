@@ -67,17 +67,16 @@ function analyzeSalesData(data, options) {
     throw new Error('calculateRevenue и calculateBonus должны быть функциями');
   }
 
-  // Подготовка промежуточных данных для сбора статистики
-  const sellerStats = data.sellers.map(seller => ({
-    seller_id: seller.id,
-    name: seller.name,
-    revenue: 0,
-    profit: 0,
-    sales_count: 0,
-    products_sold: {},  // { sku: quantity }
-    bonus: 0,
-    top_products: []
-  }));
+const sellerStats = data.sellers.map(seller => ({
+  seller_id: seller.id,
+  name: `${seller.first_name} ${seller.last_name}`,
+  revenue: 0,
+  profit: 0,
+  sales_count: 0,
+  products_sold: {},
+  bonus: 0,
+  top_products: []
+}));
 
   // Индексация продавцов и товаров
   const sellerIndex = Object.fromEntries(
