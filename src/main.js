@@ -4,7 +4,12 @@
 * @returns {number}
 */
 function calculateSimpleRevenue(purchase, _product) {
-   // @TODO: Расчет выручки от операции
+     const grossRevenue = purchase.sale_price * purchase.quantity;
+
+  // Применяем скидку (если discount — в процентах)
+  const revenue = grossRevenue * (1 - (purchase.discount || 0) / 100);
+
+  return revenue;
 }
 
 /** * Функция для расчета бонусов
@@ -14,7 +19,19 @@ function calculateSimpleRevenue(purchase, _product) {
  * @returns {number}
  */
 function calculateBonusByProfit(index, total, seller) {
-    // @TODO: Расчет бонуса от позиции в рейтинге
+    if (index === 0) {
+    // Лучший продавец получает 15% от прибыли
+    return seller.profit * 0.15;
+  } else if (index === 1 || index === 2) {
+    // Второй и третий получают по 10%
+    return seller.profit * 0.10;
+  } else if (index === total - 1) {
+    // Самый последний в рейтинге — без бонуса
+    return 0;
+  } else {
+    // Остальные получают 5%
+    return seller.profit * 0.05;
+  }
 }
 /*** Функция для анализа данных продаж
  * @param data
