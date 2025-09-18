@@ -121,7 +121,7 @@ function analyzeSalesData(data, options) {
       const cost = product.purchase_price * item.quantity;
 
       // Выручка по товару с учётом скидки
-      const revenue = calculateRevenue(item.sale_price, item.quantity, item.discount);
+      const revenue = calculateRevenue(item, product);
 
       // Прибыль по товару
       const profit = revenue - cost;
