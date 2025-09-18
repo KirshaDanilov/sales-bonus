@@ -109,9 +109,15 @@ function analyzeSalesData(data, options) {
 
   sellerStats.sort((a, b) => b.profit - a.profit);
 
+  const totalSellers = sellerStats.length;
+
   sellerStats.forEach((seller, index) => {
-    const total = sellerStats.length;
-    seller.bonus = calculateBonus(seller, index, total);
+    let bonus = calculateBonus(seller, index, totalSellers);
+    // Защита от NaN:
+    if (isNaN(bonus)) {
+      bonus = 0;
+    }
+    seller.bonus = bonus;
 
     seller.top_products = Object.entries(seller.products_sold)
       .map(([sku, quantity]) => ({ sku, quantity }))
@@ -122,8 +128,8 @@ function analyzeSalesData(data, options) {
   return sellerStats.map(seller => ({
     seller_id: seller.seller_id,
     name: seller.name,
-    revenue: +seller.revenue.toFixed(2),
-    profit: +seller.profit.toFixed(2),
+    revenue: isNaN(seller.revenue) ? 0 : +seller.revenue.toFixed(2),
+    profit: isNaN(seller.profit) ? 0 : +seller.profit.toFixed(2),
     sales_count: seller.sales_count,
     top_products: seller.top_products,
     bonus: +seller.bonus.toFixed(2)
